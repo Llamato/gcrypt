@@ -1,5 +1,5 @@
 {
-  description = "gcalc an RPN calculator written in haskell";
+  description = "gcrypt a collection of classic cryptographic algorithms";
   inputs.nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
 
   outputs = { self, nixpkgs-unstable }:
@@ -16,7 +16,7 @@
         in {
           default = pkgs.haskellPackages.developPackage {
             root = ./.;
-            name = "gcalc";
+            name = "gcrypt";
           };
         }
       );
