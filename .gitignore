@@ -1,0 +1,4 @@
+dist-newstyle
+CHANGELOG.md
+shell.nix
+flake.lock
