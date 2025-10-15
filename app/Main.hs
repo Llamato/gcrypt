@@ -1,7 +1,11 @@
 import CryptLib(encryptRotation, decryptRotation, encryptVingenere, decryptVingenere)
-import System.Environment (getArgs)
 import Text.Read (readMaybe)
 import Data.Maybe (listToMaybe, fromMaybe)
+import System.Environment (getArgs)
+import System.IO (hPutStrLn, stderr)
+import System.Directory (doesFileExist)
+
+data CryptError = NotEnoughArguments String Int Int
 
 algOptions :: String -> String
 algOptions algo
@@ -9,7 +13,7 @@ algOptions algo
   | algo == "derot" = "options for rotation decryption are <number of shifts> <plain text> use enrot or negative number of shifts for encryption"
   | algo == "envin" || algo == "vingenere" = "options for vingenere encryption are <key> <plain text> use devin for decryption or vin for short"
   | algo == "devin" = "options for vingenere decryption are <key> <cipher text> use envin for encryption"
-  | otherwise = "Algorithm not implemented yet"
+  | otherwise = "Algorithm " ++ algo ++ " not implemented yet"
 
 runAlgorithm :: String -> [String] -> String 
 runAlgorithm algo args
@@ -22,8 +26,20 @@ runAlgorithm algo args
 main :: IO ()
 main = do
   args <- getArgs
-  putStrLn (case length args of
-    0 -> "Welcome to gcrypt! Please use as follows.\ngcrypt <algorithm> [algorithm option 1, option 2, ...].\n"
-    1 -> algOptions (head args)
-    _ -> runAlgorithm (head args) (drop 1 args))
-  
+  case length args of
+    0 -> putStrLn $ "Please use as follows -> gcrypt <algorithm name> [input stream] [algorithm parameters, ...]"
+    1 -> putStrLn $ algOptions (head args)
+    _ -> case args!!1 of
+          "stdin" -> do
+            contents <- getContents
+            putStrLn $ runAlgorithm (head args) ((drop 2 args) ++ [contents])
+          "file" -> do
+              exists <- doesFileExist $ args!!2
+              if exists then do
+                contents <- readFile $ args!!2
+                putStrLn $ runAlgorithm (head args) ((drop 3 args) ++ [contents])
+              else
+                hPutStrLn stderr ("Error: file " ++ args!!1 ++ " not found!")
+          "params" -> putStrLn $ runAlgorithm (head args) (drop 2 args)
+          _ -> do
+            hPutStrLn stderr (args!!1 ++ " Is not a valid input stream. Valid input streams are [stdin, file, params]")
