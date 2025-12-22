@@ -1,6 +1,8 @@
-module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVingenere) where
-    import CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt)
-    import Data.List (elemIndex)
+module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale) where
+    import CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv)
+    import Data.List (elemIndex, transpose)
+    import Data.List.Grouping (splitEvery)
+    import Data.List.HT (sliceVertical, sliceHorizontal)
 
     encryptRotation :: Int -> String -> String
     encryptRotation r txt = map (
@@ -25,3 +27,9 @@ module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVing
                 (Just ki, Just vi) -> 
                     ((casedAlphabet v)!!((vi-ki) `mod` (length $ casedAlphabet v)))
                 _ -> v) (zip (rtlen (length $ removeDirt txt) (removeDirt key)) (removeDirt txt))) txt
+    
+    encryptScytale :: Int -> String -> String
+    encryptScytale wraps txt = concat $ transpose $ splitEvery wraps (removeDirt txt)
+    
+    decryptScytale :: Int -> String -> String
+    decryptScytale wraps text = encryptScytale ((length text) `cdiv` wraps) text

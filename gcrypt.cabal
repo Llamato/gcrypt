@@ -72,7 +72,9 @@ library
         base ^>=4.20.2.0,
         containers ^>=0.7,
         text ^>=2.1.3,
-        matrix ^>=0.3.6.4
+        matrix ^>=0.3.6.4,
+        list-grouping ^>=0.1.1,
+        utility-ht ^>=0.0.17.2
 
     -- Directories containing source files.
     hs-source-dirs:   lib

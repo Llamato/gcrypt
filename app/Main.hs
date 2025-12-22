@@ -1,4 +1,4 @@
-import CryptLib(encryptRotation, decryptRotation, encryptVingenere, decryptVingenere)
+import CryptLib(encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale)
 import Text.Read (readMaybe)
 import Data.Maybe (listToMaybe, fromMaybe)
 import System.Environment (getArgs)
@@ -13,21 +13,25 @@ algOptions algo
   | algo == "derot" = "options for rotation decryption are <number of shifts> <plain text> use enrot or negative number of shifts for encryption"
   | algo == "envin" || algo == "vingenere" = "options for vingenere encryption are <key> <plain text> use devin for decryption or vin for short"
   | algo == "devin" = "options for vingenere decryption are <key> <cipher text> use envin for encryption"
+  | algo == "enscytale" || algo == "scytale" = "options for scytale encryption are <number of wraps> <plain text>"
+  | algo == "descytale" || algo == "scytale" = "options for scytale decryption are <number of wraps> <cipher text>"
   | otherwise = "Algorithm " ++ algo ++ " not implemented yet"
 
 runAlgorithm :: String -> [String] -> String 
 runAlgorithm algo args
   | algo == "enrot" = CryptLib.encryptRotation (fromMaybe 0 (readMaybe $ fromMaybe "0" (listToMaybe args))) (concat $ drop 1 args)
-  | algo == "derot" = CryptLib.decryptRotation ((fromMaybe 0 (readMaybe $ fromMaybe "0" (listToMaybe args)))) (concat $ drop 1 args)
+  | algo == "derot" = CryptLib.decryptRotation (fromMaybe 0 (readMaybe $ fromMaybe "0" (listToMaybe args))) (concat $ drop 1 args)
   | algo == "envin" = CryptLib.encryptVingenere (fromMaybe "" (listToMaybe args)) (concat $ drop 1 args)
   | algo == "devin" = CryptLib.decryptVingenere (fromMaybe "" (listToMaybe args)) (concat $ drop 1 args)
+  | algo == "enscytale" = CryptLib.encryptScytale (fromMaybe 0 (readMaybe $ fromMaybe "0" (listToMaybe args))) (concat $ drop 1 args)
+  | algo == "descytale" = CryptLib.decryptScytale (fromMaybe 0 (readMaybe $ fromMaybe "0" (listToMaybe args))) (concat $ drop 1 args)
   | otherwise = "Algorithm not implemented yet"
 
 main :: IO ()
 main = do
   args <- getArgs
   case length args of
-    0 -> putStrLn $ "Please use as follows -> gcrypt <algorithm name> [input stream] [algorithm parameters, ...]"
+    0 -> putStrLn $ "Please use as follows -> gcrypt <algorithm name> [input stream] [algorithm parameters, ...]\ncurrently available algorithms are rotation (enrot, derot), Vingenere (envin, devin) and Scytale (enscytale, descytale)"
     1 -> putStrLn $ algOptions (head args)
     _ -> case args!!1 of
           "stdin" -> do

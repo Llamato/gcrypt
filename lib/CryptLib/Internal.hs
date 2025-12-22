@@ -1,4 +1,4 @@
-module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt) where
+module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv) where
     import Data.Char (isLowerCase)
     import Data.List (findIndex)
     import Data.Maybe (isNothing)
@@ -28,3 +28,6 @@ module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt) where
     readdDirt str oreg = case findIndex (isDirt) oreg of
         Just pos -> readdDirt ((take pos str) ++ [oreg!!pos] ++ (drop pos str)) (take pos oreg ++ ['A'] ++ (drop (pos+1) oreg))
         Nothing -> str
+    
+    cdiv :: Integral a => a -> a -> a
+    cdiv n d = (n + d -1) `div` d 
