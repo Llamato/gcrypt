@@ -1,8 +1,9 @@
-module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale) where
+module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale, encryptOneTimePad, decryptOneTimePad) where
     import CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv)
     import Data.List (elemIndex, transpose)
     import Data.List.Grouping (splitEvery)
-    import Data.List.HT (sliceVertical, sliceHorizontal)
+    import Data.Char (ord, chr)
+    import Data.Bits (xor)
 
     encryptRotation :: Int -> String -> String
     encryptRotation r txt = map (
@@ -33,3 +34,9 @@ module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVing
     
     decryptScytale :: Int -> String -> String
     decryptScytale wraps text = encryptScytale ((length text) `cdiv` wraps) text
+
+    encryptOneTimePad :: String -> String -> [Int]
+    encryptOneTimePad pad txt =  zipWith (\pc tc -> ((ord pc) `xor` (ord tc))) (cycle pad) txt
+
+    decryptOneTimePad :: String -> [Int] -> String
+    decryptOneTimePad pad nums = zipWith (\pc num -> chr ((ord pc) `xor` num)) (cycle pad) nums
