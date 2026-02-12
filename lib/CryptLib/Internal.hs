@@ -1,4 +1,4 @@
-module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, feistelRoundKeys, feistelEncryptionNetwork, feistelDecryptionNetwork) where
+module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, feistelRoundKeys, feistelNetwork) where
     import Data.Char (isLowerCase)
     import Data.List (findIndex)
     import Data.List.Split (chunksOf)
@@ -66,10 +66,14 @@ module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pai
             r2 = l1 `strxor` f1
             l2 = r1
 
+    feistelNetwork :: (String, String) -> [String] -> (String, String)
+    feistelNetwork block [] = block
+    feistelNetwork block (key:keys) = feistelNetwork (feistelRound block key) keys
+
     feistelEncryptionNetwork :: (String, String) -> [String] -> (String, String)
     feistelEncryptionNetwork block [] = block
     feistelEncryptionNetwork block (key:keys) = feistelEncryptionNetwork (feistelRound block key) keys
 
     feistelDecryptionNetwork :: (String, String) -> [String] -> (String, String)
     feistelDecryptionNetwork block [] = block
-    feistelDecryptionNetwork block (key:keys) = swapPair $ feistelDecryptionNetwork (feistelRound (swapPair block) key) keys
+    feistelDecryptionNetwork block (key:keys) = swapPair $ feistelDecryptionNetwork (feistelRound (swapPair block) key) (reverse keys)

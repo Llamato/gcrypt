@@ -1,5 +1,5 @@
 module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale, encryptOneTimePad, decryptOneTimePad, encryptFeistel, decryptFeistel) where
-    import CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, feistelRoundKeys, feistelEncryptionNetwork, feistelDecryptionNetwork)
+    import CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, feistelRoundKeys, feistelNetwork)
     import Data.List (elemIndex, transpose)
     import Data.List.Grouping (splitEvery)
     import Data.List.Split (chunksOf)
@@ -42,11 +42,8 @@ module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVing
     decryptOneTimePad :: String -> [Int] -> String
     decryptOneTimePad pad nums = zipWith (\pc num -> chr ((ord pc) `xor` num)) (cycle pad) nums
 
-    applyFeistel :: [String] -> [([Char], [Char])] -> String
-    applyFeistel roundKeys textHalfBlocks = concatMap (\textHalfBlock -> concat . pairToList $ feistelEncryptionNetwork textHalfBlock roundKeys) textHalfBlocks
-    
     encryptFeistel :: String -> String -> [Int]
-    encryptFeistel key text = map ord (applyFeistel roundKeys textHalfBlocks)
+    encryptFeistel key text = map ord $ concatMap (\textHalfBlock -> concat . pairToList $ feistelNetwork textHalfBlock roundKeys) textHalfBlocks
         where
             textblocks = chunksOf blockSizeChars text
             roundKeys = feistelRoundKeys key blockSizeChars rounds
@@ -55,11 +52,13 @@ module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVing
             rounds = 16
 
     decryptFeistel :: String -> [Int] -> String
-    decryptFeistel key nums = applyFeistel roundKeys swappedTextHalfBlocks 
+    decryptFeistel key nums = concatMap (\swappedTextHalfBlock -> concat . pairToList . swapPair $ feistelNetwork swappedTextHalfBlock reversedRoundKeys) swappedTextHalfBlocks
         where
-            numblocks = chunksOf blockSizeChars nums
-            roundKeys = reverse $ feistelRoundKeys key blockSizeChars rounds
-            numHalfBlocks = map halves numblocks
-            swappedTextHalfBlocks = map (\block -> (map chr $ snd block, map chr $ fst block)) numHalfBlocks
+            numBlocks = chunksOf blockSizeChars nums
+            roundKeys = feistelRoundKeys key blockSizeChars rounds
+            reversedRoundKeys = reverse $ roundKeys
+            numHalfBlocks = map halves numBlocks
+            textHalfBlocks = map (\block -> (map chr $ fst block, map chr $ snd block)) numHalfBlocks
+            swappedTextHalfBlocks = map swapPair textHalfBlocks
             blockSizeChars = 4 
             rounds = 16
