@@ -1,12 +1,16 @@
-import CryptLib(encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale, encryptOneTimePad, decryptOneTimePad)
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
+import CryptLib(encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale, encryptOneTimePad, decryptOneTimePad, encryptFeistel, decryptFeistel)
 import Text.Read (readMaybe)
-import Data.Maybe (listToMaybe, fromMaybe)
+import Data.Maybe (listToMaybe, fromMaybe, catMaybes)
 import Data.List (intercalate)
 import System.Environment (getArgs)
 import System.IO (hPutStrLn, stderr)
 import System.Directory (doesFileExist)
 
 data CryptError = NotEnoughArguments String Int Int
+
+showIntArray :: [Int] -> String
+showIntArray nums = intercalate " " $ map show nums 
 
 algOptions :: String -> String
 algOptions algo
@@ -18,6 +22,8 @@ algOptions algo
   | algo == "descytale" || algo == "scytale" = "options for scytale decryption are <number of wraps> <cipher text>"
   | algo == "enonetimepad" = "options for one time pad are <pad String> <plain text String>"
   | algo == "deonetimepad" = "options for one time pad are <pad String> <[cipher numbers]>"
+  | algo == "enfeistel" = "options for feistel network encryption are <key> <plaintext>"
+  | algo == "defeistel" = "options for feistel network decryption are <key> <plaintext>"
   | otherwise = "Algorithm " ++ algo ++ " not implemented yet"
 
 runAlgorithm :: String -> [String] -> String 
@@ -28,9 +34,10 @@ runAlgorithm algo args
   | algo == "devin" = CryptLib.decryptVingenere (fromMaybe "" (listToMaybe args)) (concat $ drop 1 args)
   | algo == "enscytale" = CryptLib.encryptScytale (fromMaybe 0 (readMaybe $ fromMaybe "0" (listToMaybe args))) (concat $ drop 1 args)
   | algo == "descytale" = CryptLib.decryptScytale (fromMaybe 0 (readMaybe $ fromMaybe "0" (listToMaybe args))) (concat $ drop 1 args)
-  | algo == "enonetimepad" =  intercalate " " $ map (show) (CryptLib.encryptOneTimePad (fromMaybe "" (listToMaybe args)) (concat $ drop 1 args))
+  | algo == "enonetimepad" =  showIntArray (CryptLib.encryptOneTimePad (fromMaybe "" (listToMaybe args)) (concat $ drop 1 args))
   | algo == "deonetimepad" =  CryptLib.decryptOneTimePad (fromMaybe "" (listToMaybe args)) (map (\arg -> fromMaybe 0 $ readMaybe arg) (drop 1 args))
-  | otherwise = "Algorithm not implemented yet"
+  | algo == "enfeistel" = showIntArray (CryptLib.encryptFeistel (fromMaybe "" (listToMaybe args)) (concat $ drop 1 args))
+  | algo == "defeistel" = CryptLib.decryptFeistel (fromMaybe "" (listToMaybe args)) (catMaybes (map readMaybe $ drop 1 args))
 
 main :: IO ()
 main = do
