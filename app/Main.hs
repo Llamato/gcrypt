@@ -43,7 +43,7 @@ main :: IO ()
 main = do
   args <- getArgs
   case length args of
-    0 -> putStrLn $ "Please use as follows -> gcrypt <algorithm name> [input stream] [algorithm parameters, ...]\ncurrently available algorithms are rotation (enrot, derot), Vingenere (envin, devin), scytale (enscytale, descytale) and xor one time padding (onetimepad)"
+    0 -> putStrLn $ "Please use as follows -> gcrypt <algorithm name> [input stream] [algorithm parameters, ...]\ncurrently available algorithms are rotation (enrot, derot), Vingenere (envin, devin), scytale (enscytale, descytale) and xor one time padding (onetimepad) and feistel network rounds (enfeistel, defeistel)"
     1 -> putStrLn $ algOptions (head args)
     _ -> case args!!1 of
           "stdin" -> do
