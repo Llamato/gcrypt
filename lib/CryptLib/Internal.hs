@@ -69,11 +69,3 @@ module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pai
     feistelNetwork :: (String, String) -> [String] -> (String, String)
     feistelNetwork block [] = block
     feistelNetwork block (key:keys) = feistelNetwork (feistelRound block key) keys
-
-    feistelEncryptionNetwork :: (String, String) -> [String] -> (String, String)
-    feistelEncryptionNetwork block [] = block
-    feistelEncryptionNetwork block (key:keys) = feistelEncryptionNetwork (feistelRound block key) keys
-
-    feistelDecryptionNetwork :: (String, String) -> [String] -> (String, String)
-    feistelDecryptionNetwork block [] = block
-    feistelDecryptionNetwork block (key:keys) = swapPair $ feistelDecryptionNetwork (feistelRound (swapPair block) key) (reverse keys)

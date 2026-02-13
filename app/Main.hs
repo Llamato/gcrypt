@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
-import CryptLib(encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale, encryptOneTimePad, decryptOneTimePad, encryptFeistel, decryptFeistel)
+import CryptLib(encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale, encryptXorOneTimePad, decryptXorOneTimePad, encryptModOneTimePad, decryptModOneTimePad, encryptFeistel, decryptFeistel)
 import Text.Read (readMaybe)
 import Data.Maybe (listToMaybe, fromMaybe, catMaybes)
 import Data.List (intercalate)
@@ -20,8 +20,10 @@ algOptions algo
   | algo == "devin" = "options for vingenere decryption are <key> <cipher text> use envin for encryption"
   | algo == "enscytale" || algo == "scytale" = "options for scytale encryption are <number of wraps> <plain text>"
   | algo == "descytale" || algo == "scytale" = "options for scytale decryption are <number of wraps> <cipher text>"
-  | algo == "enonetimepad" = "options for one time pad are <pad String> <plain text String>"
-  | algo == "deonetimepad" = "options for one time pad are <pad String> <[cipher numbers]>"
+  | algo == "enxoronetimepad" = "options for xor one time pad encryption are <pad String> <plain text>"
+  | algo == "dexoronetimepad" = "options for xor one time pad decryption are <pad String> <[cipher numbers]>"
+  | algo == "enmodonetimepad" = "options for modulo one time pad encryption are <pad String> <plain text>"
+  | algo == "demodonetimepad" = "options for modulo one time pad decryption are <pad String> <cipher text>"
   | algo == "enfeistel" = "options for feistel network encryption are <key> <plaintext>"
   | algo == "defeistel" = "options for feistel network decryption are <key> <plaintext>"
   | otherwise = "Algorithm " ++ algo ++ " not implemented yet"
@@ -34,8 +36,10 @@ runAlgorithm algo args
   | algo == "devin" = CryptLib.decryptVingenere (fromMaybe "" (listToMaybe args)) (concat $ drop 1 args)
   | algo == "enscytale" = CryptLib.encryptScytale (fromMaybe 0 (readMaybe $ fromMaybe "0" (listToMaybe args))) (concat $ drop 1 args)
   | algo == "descytale" = CryptLib.decryptScytale (fromMaybe 0 (readMaybe $ fromMaybe "0" (listToMaybe args))) (concat $ drop 1 args)
-  | algo == "enonetimepad" =  showIntArray (CryptLib.encryptOneTimePad (fromMaybe "" (listToMaybe args)) (concat $ drop 1 args))
-  | algo == "deonetimepad" =  CryptLib.decryptOneTimePad (fromMaybe "" (listToMaybe args)) (map (\arg -> fromMaybe 0 $ readMaybe arg) (drop 1 args))
+  | algo == "enxoronetimepad" = showIntArray (CryptLib.encryptXorOneTimePad (fromMaybe "" (listToMaybe args)) (concat $ drop 1 args))
+  | algo == "dexoronetimepad" = CryptLib.decryptXorOneTimePad (fromMaybe "" (listToMaybe args)) (map (\arg -> fromMaybe 0 $ readMaybe arg) (drop 1 args))
+  | algo == "enmodonetimepad" = CryptLib.encryptModOneTimePad (fromMaybe "" (listToMaybe args)) (concat $ drop 1 args)
+  | algo == "demodonetimepad" = CryptLib.decryptModOneTimePad (fromMaybe "" (listToMaybe args)) (concat $ drop 1 args)
   | algo == "enfeistel" = showIntArray (CryptLib.encryptFeistel (fromMaybe "" (listToMaybe args)) (concat $ drop 1 args))
   | algo == "defeistel" = CryptLib.decryptFeistel (fromMaybe "" (listToMaybe args)) (catMaybes (map readMaybe $ drop 1 args))
 

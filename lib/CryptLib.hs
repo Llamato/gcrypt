@@ -1,4 +1,4 @@
-module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale, encryptOneTimePad, decryptOneTimePad, encryptFeistel, decryptFeistel) where
+module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale, encryptXorOnetimePad, decryptXorOneTimePad, encryptModOneTimePad, decryptModOneTimePad, encryptFeistel, decryptFeistel) where
     import CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, feistelRoundKeys, feistelNetwork)
     import Data.List (elemIndex, transpose)
     import Data.List.Grouping (splitEvery)
@@ -36,18 +36,30 @@ module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVing
     decryptScytale :: Int -> String -> String
     decryptScytale wraps text = encryptScytale ((length text) `cdiv` wraps) text
 
-    encryptOneTimePad :: String -> String -> [Int]
-    encryptOneTimePad pad txt =  zipWith (\pc tc -> ((ord pc) `xor` (ord tc))) (cycle pad) txt
+    encryptXorOnetimePad :: String -> String -> [Int]
+    encryptXorOnetimePad pad txt = zipWith (\pc tc -> ((ord pc) `xor` (ord tc))) (cycle pad) txt
 
-    decryptOneTimePad :: String -> [Int] -> String
-    decryptOneTimePad pad nums = zipWith (\pc num -> chr ((ord pc) `xor` num)) (cycle pad) nums
+    decryptXorOnetimePad :: String -> [Int] -> String
+    decryptXorOnetimePad pad nums = zipWith (\pc num -> chr ((ord pc) `xor` num)) (cycle pad) nums
+
+    encryptModOneTimePad :: String -> String -> String
+    encryptModOneTimePad pad txt = zipWith (\pc tc -> 
+        case (elemIndex pc $ casedAlphabet pc, elemIndex tc $ casedAlphabet tc) of 
+            (Just pi, Just ti) -> (casedAlphabet tc)!!((ti+pi) `mod` (length $ casedAlphabet tc))
+            _ -> tc) (cycle pad) txt
+
+    decryptModOneTimePad :: String -> String -> String
+    decryptModOneTimePad pad txt = zipWith (\pc tc ->
+        case (elemIndex pc $ casedAlphabet pc, elemIndex tc $ casedAlphabet tc) of
+            (Just pi, Just ti) -> (casedAlphabet tc)!!((ti-pi) `mod` (length $ casedAlphabet tc))
+            _ -> tc) (cycle pad) txt
 
     encryptFeistel :: String -> String -> [Int]
     encryptFeistel key text = map ord $ concatMap (\textHalfBlock -> concat . pairToList $ feistelNetwork textHalfBlock roundKeys) textHalfBlocks
         where
-            textblocks = chunksOf blockSizeChars text
+            textBlocks = chunksOf blockSizeChars text
             roundKeys = feistelRoundKeys key blockSizeChars rounds
-            textHalfBlocks = map halves textblocks
+            textHalfBlocks = map halves textBlocks
             blockSizeChars = 4 
             rounds = 16
 

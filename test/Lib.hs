@@ -1,5 +1,5 @@
 module Main (main) where
-    import CryptLib(encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptOneTimePad, decryptOneTimePad, encryptFeistel, decryptFeistel)
+    import CryptLib(encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptXorOneTimePad, decryptXorOneTimePad, encryptFeistel, decryptFeistel)
     import Test.Hspec (hspec, describe, it, shouldBe)
     
     main :: IO ()
@@ -18,9 +18,9 @@ module Main (main) where
         
         describe "onetimepad" $ do
             it "encrypts input by applying a xor one time pad to the input" $ do
-                encryptOneTimePad "The quick brown fox jumps over 13 lazy dogs." "Broken dreams of glass" `shouldBe` ([22, 26, 10, 75, 20, 27, 73, 7, 25, 69, 3, 31, 28, 87, 1, 70, 70, 8, 20, 65, 25, 6])
+                encryptXorOneTimePad "The quick brown fox jumps over 13 lazy dogs." "Broken dreams of glass" `shouldBe` ([22, 26, 10, 75, 20, 27, 73, 7, 25, 69, 3, 31, 28, 87, 1, 70, 70, 8, 20, 65, 25, 6])
             it "decrypts input by applying a xor one time pad to the input" $ do
-                decryptOneTimePad "The quick brown fox jumps over 13 lazy dogs." [22, 26, 10, 75, 20, 27, 73, 7, 25, 69, 3, 31, 28, 87, 1, 70, 70, 8, 20, 65, 25, 6] `shouldBe` ("Broken dreams of glass")
+                decryptXorOneTimePad "The quick brown fox jumps over 13 lazy dogs." [22, 26, 10, 75, 20, 27, 73, 7, 25, 69, 3, 31, 28, 87, 1, 70, 70, 8, 20, 65, 25, 6] `shouldBe` ("Broken dreams of glass")
         
         describe "feistel" $ do
             it "encrypts input by piping the input though a feistel network" $ do
