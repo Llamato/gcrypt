@@ -1,5 +1,5 @@
-module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale, encryptXorOnetimePad, decryptXorOneTimePad, encryptModOneTimePad, decryptModOneTimePad, encryptFeistel, decryptFeistel) where
-    import CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, feistelRoundKeys, feistelNetwork)
+module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale, encryptXorOneTimePad, decryptXorOneTimePad, encryptModOneTimePad, decryptModOneTimePad, encryptFeistel, decryptFeistel, padPKCS7, unpadPKCS7) where
+    import CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, unpadBlock, feistelRoundKeys, feistelNetwork)
     import Data.List (elemIndex, transpose)
     import Data.List.Grouping (splitEvery)
     import Data.List.Split (chunksOf)
@@ -36,11 +36,11 @@ module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVing
     decryptScytale :: Int -> String -> String
     decryptScytale wraps text = encryptScytale ((length text) `cdiv` wraps) text
 
-    encryptXorOnetimePad :: String -> String -> [Int]
-    encryptXorOnetimePad pad txt = zipWith (\pc tc -> ((ord pc) `xor` (ord tc))) (cycle pad) txt
+    encryptXorOneTimePad :: String -> String -> [Int]
+    encryptXorOneTimePad pad txt = zipWith (\pc tc -> ((ord pc) `xor` (ord tc))) (cycle pad) txt
 
-    decryptXorOnetimePad :: String -> [Int] -> String
-    decryptXorOnetimePad pad nums = zipWith (\pc num -> chr ((ord pc) `xor` num)) (cycle pad) nums
+    decryptXorOneTimePad :: String -> [Int] -> String
+    decryptXorOneTimePad pad nums = zipWith (\pc num -> chr ((ord pc) `xor` num)) (cycle pad) nums
 
     encryptModOneTimePad :: String -> String -> String
     encryptModOneTimePad pad txt = zipWith (\pc tc -> 
@@ -54,23 +54,36 @@ module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVing
             (Just pi, Just ti) -> (casedAlphabet tc)!!((ti-pi) `mod` (length $ casedAlphabet tc))
             _ -> tc) (cycle pad) txt
 
+    padPKCS7 :: Int -> String -> String
+    padPKCS7 blockSize blockData = blockData ++ replicate additionalBytes (chr additionalBytes)
+        where 
+            remainingBlockBytes = length blockData `mod` blockSize
+            additionalBytes = blockSize - remainingBlockBytes
+
+    unpadPKCS7 :: String -> String
+    unpadPKCS7 blockData = take (length blockData - padSize) blockData
+        where
+            padSize = ord $ last blockData
+
     encryptFeistel :: String -> String -> [Int]
     encryptFeistel key text = map ord $ concatMap (\textHalfBlock -> concat . pairToList $ feistelNetwork textHalfBlock roundKeys) textHalfBlocks
         where
-            textBlocks = chunksOf blockSizeChars text
-            roundKeys = feistelRoundKeys key blockSizeChars rounds
+            padedInput = padPKCS7 blockSize text
+            textBlocks = chunksOf blockSize padedInput
+            roundKeys = feistelRoundKeys key blockSize rounds
             textHalfBlocks = map halves textBlocks
-            blockSizeChars = 4 
+            blockSize = 4 
             rounds = 16
 
     decryptFeistel :: String -> [Int] -> String
-    decryptFeistel key nums = concatMap (\swappedTextHalfBlock -> concat . pairToList . swapPair $ feistelNetwork swappedTextHalfBlock reversedRoundKeys) swappedTextHalfBlocks
+    decryptFeistel key nums = unpadPKCS7 paddedOutput
         where
-            numBlocks = chunksOf blockSizeChars nums
-            roundKeys = feistelRoundKeys key blockSizeChars rounds
+            text = map chr nums
+            textBlocks = chunksOf blockSize text
+            roundKeys = feistelRoundKeys key blockSize rounds
             reversedRoundKeys = reverse $ roundKeys
-            numHalfBlocks = map halves numBlocks
-            textHalfBlocks = map (\block -> (map chr $ fst block, map chr $ snd block)) numHalfBlocks
+            textHalfBlocks = map halves textBlocks
             swappedTextHalfBlocks = map swapPair textHalfBlocks
-            blockSizeChars = 4 
+            paddedOutput = concatMap (\swappedTextHalfBlock -> concat . pairToList . swapPair $ feistelNetwork swappedTextHalfBlock reversedRoundKeys) swappedTextHalfBlocks
+            blockSize = 4 
             rounds = 16

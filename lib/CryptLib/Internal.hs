@@ -1,4 +1,4 @@
-module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, feistelRoundKeys, feistelNetwork) where
+module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, unpadBlock, feistelRoundKeys, feistelNetwork) where
     import Data.Char (isLowerCase)
     import Data.List (findIndex)
     import Data.List.Split (chunksOf)
@@ -45,19 +45,24 @@ module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pai
     halves list = (take halflength list, drop halflength list)
         where 
             halflength = length list `div` 2
-    
+
     padBlock :: Int -> String -> String
-    padBlock blocksize str
-        | length str `mod` blocksize == 0 = str
-        | otherwise = str ++ replicate ((blocksize - length str) `mod` blocksize) ' '
+    padBlock blockSize block
+        | length block `mod` blockSize == 0 = block
+        | otherwise = block ++ replicate ((blockSize - length block) `mod` blockSize) ' '
+
+    unpadBlock :: Int -> String -> String
+    unpadBlock blockSize block
+        | length block `mod` blockSize == 0 = block
+        | otherwise = take ((length block `div` blockSize) * blockSize) block
 
     strxor :: String -> String -> String
     strxor str1 str2 = map chr $ zipWith xor (map ord str1) (map ord str2)
 
     feistelRoundKeys :: String -> Int -> Int -> [String]
-    feistelRoundKeys key blocksizechars rounds = map (padBlock halfblocksize) (take rounds $ cycle $ chunksOf halfblocksize key)
+    feistelRoundKeys key blockSizechars rounds = map (padBlock halfblockSize) (take rounds $ cycle $ chunksOf halfblockSize key)
         where 
-            halfblocksize = blocksizechars `div` 2
+            halfblockSize = blockSizechars `div` 2
 
     feistelRound :: (String, String) -> String -> (String, String)
     feistelRound (l1, r1) k1 = (l2, r2)
