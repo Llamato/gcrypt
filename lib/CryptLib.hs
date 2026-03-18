@@ -1,10 +1,9 @@
 module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVingenere, encryptScytale, decryptScytale, encryptXorOneTimePad, decryptXorOneTimePad, encryptModOneTimePad, decryptModOneTimePad, encryptFeistel, decryptFeistel, padPKCS7, unpadPKCS7) where
-    import CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, unpadBlock, feistelRoundKeys, feistelNetwork)
+    import CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, unpadBlock, trimBits, feistelRoundKeys, feistelNetwork)
     import Data.List (elemIndex, transpose)
     import Data.List.Grouping (splitEvery)
     import Data.List.Split (chunksOf)
-    import Data.Char (ord, chr)
-    import Data.Bits (xor)
+    import Data.Char (ord, chr, shiftL)
     
     encryptRotation :: Int -> String -> String
     encryptRotation r txt = map (
@@ -87,3 +86,18 @@ module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVing
             paddedOutput = concatMap (\swappedTextHalfBlock -> concat . pairToList . swapPair $ feistelNetwork swappedTextHalfBlock reversedRoundKeys) swappedTextHalfBlocks
             blockSize = 4 
             rounds = 16
+
+    encryptSDES :: String -> String -> [Int]
+    encryptSDES key text = 
+        where
+            trimmedKey = trimBits 10 key
+            keyHalves = halves trimmedKey
+            shiftedhalves = (shiftL 1 $ fst keyHalves, shiftL 1 $ snd keyHalves)
+            recombinedhalves = [fst keyHalves, snd keyHalves]
+            
+    
+    encryptDES :: String -> String -> [Int]
+    encryptDES key text = 
+    
+    decryptDES :: String -> [Int] -> String
+    decryptDES key nums = 

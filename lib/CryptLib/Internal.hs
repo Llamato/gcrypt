@@ -1,10 +1,11 @@
+{-# LANGUAGE BinaryLiterals #-}
 module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, unpadBlock, feistelRoundKeys, feistelNetwork) where
     import Data.Char (isLowerCase)
-    import Data.List (findIndex)
+    import Data.List (findIndex, find)
     import Data.List.Split (chunksOf)
     import Data.Maybe (isNothing)
     import Data.Char (ord, chr)
-    import Data.Bits (xor)
+    import Data.Bits ((.&.), (.|.), xor, shiftL)
     
     upperCaseAlphabet :: String
     upperCaseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -49,7 +50,7 @@ module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pai
     padBlock :: Int -> String -> String
     padBlock blockSize block
         | length block `mod` blockSize == 0 = block
-        | otherwise = block ++ replicate ((blockSize - length block) `mod` blockSize) ' '
+        | otherwise = block ++ replicate ((blockSize - length block) `mod` blockSize) '\NUL'
 
     unpadBlock :: Int -> String -> String
     unpadBlock blockSize block
@@ -58,6 +59,13 @@ module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pai
 
     strxor :: String -> String -> String
     strxor str1 str2 = map chr $ zipWith xor (map ord str1) (map ord str2)
+
+    trimBits :: Int -> String -> String
+    trimBits bsize str = init str ++ [chr (ord lastByte .&. mask)]
+        where 
+            lastByte = last $ take (bsize `div` 8) str
+            bitsToKeep = bsize `mod` 8
+            mask = (1 `shiftL` bitsToKeep) - 1
 
     feistelRoundKeys :: String -> Int -> Int -> [String]
     feistelRoundKeys key blockSizechars rounds = map (padBlock halfblockSize) (take rounds $ cycle $ chunksOf halfblockSize key)
@@ -74,3 +82,8 @@ module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pai
     feistelNetwork :: (String, String) -> [String] -> (String, String)
     feistelNetwork block [] = block
     feistelNetwork block (key:keys) = feistelNetwork (feistelRound block key) keys
+
+    lookupSubstitution :: Char -> [(Char, Char)] -> Char
+    lookupSubstitution input lookupTable = case find (\c -> input==fst c) lookupTable of
+        Just lookupEntry -> snd lookupEntry
+        Nothing -> input
