@@ -3,7 +3,8 @@ module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVing
     import Data.List (elemIndex, transpose)
     import Data.List.Grouping (splitEvery)
     import Data.List.Split (chunksOf)
-    import Data.Char (ord, chr, shiftL)
+    import Data.Char (ord, chr)
+    import Data.Bits (xor, shiftL)
     
     encryptRotation :: Int -> String -> String
     encryptRotation r txt = map (
@@ -87,17 +88,17 @@ module CryptLib (encryptRotation, decryptRotation, encryptVingenere, decryptVing
             blockSize = 4 
             rounds = 16
 
-    encryptSDES :: String -> String -> [Int]
-    encryptSDES key text = 
-        where
-            trimmedKey = trimBits 10 key
-            keyHalves = halves trimmedKey
-            shiftedhalves = (shiftL 1 $ fst keyHalves, shiftL 1 $ snd keyHalves)
-            recombinedhalves = [fst keyHalves, snd keyHalves]
+    --encryptSDES :: String -> String -> [Int]
+    --encryptSDES key text = 
+    --    where
+    --        trimmedKey = trimBits 10 key
+    --        keyHalves = halves trimmedKey
+    --        shiftedhalves = (shiftL 1 $ fst keyHalves, shiftL 1 $ snd keyHalves)
+    --        recombinedhalves = [fst keyHalves, snd keyHalves]
             
     
-    encryptDES :: String -> String -> [Int]
-    encryptDES key text = 
+    --encryptDES :: String -> String -> [Int]
+    --encryptDES key text = 
     
-    decryptDES :: String -> [Int] -> String
-    decryptDES key nums = 
+    --decryptDES :: String -> [Int] -> String
+    --decryptDES key nums = 

@@ -1,5 +1,5 @@
 {-# LANGUAGE BinaryLiterals #-}
-module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, unpadBlock, feistelRoundKeys, feistelNetwork) where
+module CryptLib.Internal (casedAlphabet, rtlen, removeDirt, readdDirt, cdiv, pairToList, swapPair, halves, padBlock, unpadBlock, trimBits, feistelRoundKeys, feistelNetwork) where
     import Data.Char (isLowerCase)
     import Data.List (findIndex, find)
     import Data.List.Split (chunksOf)
